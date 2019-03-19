@@ -6,6 +6,8 @@
 	<title>WikiSearch</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" type="text/css" media="screen" href="main.css">
+    <script src="jquery/jquery-3.3.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.0/dist/jquery.validate.min.js"></script>
 	<script src="main.js"></script>
 </head>
 <body>
@@ -14,13 +16,15 @@
 			<div class="center-box">
 				<div class="logo-wrapper">
 					<div class="logo">
-						<img src="img/wikipedia-logo-text.png">
+                        <a href="index.html">
+                            <img src="img/wikipedia-logo-text.png">
+                        </a>
 					</div>
 				</div>
-				<form action="./results.html" method="GET">
+				<form id="search" action="./results.html" method="GET" autocomplete="off">
 					<div class="search-bar-wrapper">
 						<div class="search-bar">
-							<input type="text" name="q">
+							<input type="text" name="q" autofocus>
 						</div>
 					</div>
 					<div class="search-button-wrapper">

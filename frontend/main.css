@@ -1,4 +1,4 @@
-body {
+html, body {
 	width: 100%;
 	height: 100%;
 	margin: 0;
@@ -28,16 +28,19 @@ body {
 	margin-bottom: 250px;
 }
 .logo-wrapper {
-	width: 220px;
-	margin: 0 auto;
+	width: 100%;
+    display: flex;
+	justify-content: center;
+	align-items: center;
 }
 
 .logo img {
-	width: 100%;
+	width: 220px;
 }
 
 .search-bar-wrapper {
-	width: 600px;
+    width: 600px;
+    max-width: 100%
 }
 
 .search-bar {

@@ -16,7 +16,7 @@ class Article(object):
         data['text'] = self.text
         data['pagerank'] = self.pagerank
 
-        return json.dumps(data)
+        return data
 
     def set_pagerank(self, pagerank):
         self.pagerank = pagerank

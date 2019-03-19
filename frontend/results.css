@@ -1,5 +1,6 @@
-body {
-	width: 100%;
+body, html{
+    width: 100%;
+    min-width: 750px;
 	height: 100%;
 	margin: 0;
 	padding: 0;
@@ -7,11 +8,10 @@ body {
 }
 
 .container {
-	position: absolute;
-	top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
+	height: 100%;
+	width: 100%;
+	margin: 0;
+	padding: 0;
 }
 
 .wrapper {
@@ -55,7 +55,7 @@ body {
 .search-wrapper {
 	float: left;
 	height: 100%;
-	width: 520px;
+	width: 510px;
 }
 
 .search {
@@ -102,7 +102,8 @@ body {
 }
 
 .result-wrapper {
-	width: 38%;
+    width: 38%;
+    min-width: 500px; 
 	height: auto;
 	padding: 1px 0;
 }
