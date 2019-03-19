@@ -16,6 +16,7 @@ var searchArticles = function searchArticles() {
                 $('.results').append(htmlArticle);
             });
             $('.search input').val(query);
+            $('.result-count p').html('About ' + articles.length + ' search results')
         },
         error: function(e) {
             console.log(e)
@@ -43,9 +44,9 @@ var createArticle = function createArticle(article) {
         '<div class="result-wrapper">',
             '<div class="result">',
                 '<div class="result-header">',
-                    '<a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">',
-                        '<h3>Article Title: ' + article.title + '</h1>',
-                        '<p>https://www.youtube.com/watch?v=dQw4w9WgXcQ</p>',
+                    '<a href="https://en.wikipedia.org/wiki/' + article.title + '">',
+                        '<h3>Wikipedia Article: ' + article.title + '</h1>',
+                        '<p>https://en.wikipedia.org/wiki/' + article.title + '</p>',
                     '</a>',
                 '</div>',
                 '<div class="result-source">',
