@@ -86,3 +86,7 @@ html, body {
 .search-button button:hover {
 	background-color: #DDD;
 }
+
+.search-button button:focus {
+	outline: none;
+}

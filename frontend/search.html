@@ -6,27 +6,30 @@
 	<title>Wiki Search - Results</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" type="text/css" media="screen" href="search.css">
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
 	<link rel="shortcut icon" href="wikipedia.ico"/>
+
     <script src="jquery/jquery-3.3.1.min.js"></script>
     <script src="pagination/pagination.min.js"></script>
 	<script src="search.js"></script>
 </head>
 <body>
-	<div class="container">
-		<div class="wrapper">
-			<div class="header-wrapper">
-				<div class="header">
-					<div class="logo-wrapper">
-						<div class="logo">
+	<div id="container">
+		<div id="wrapper">
+			<div id="header-wrapper">
+				<div id="header">
+					<div id="logo-wrapper">
+						<div id="logo">
 							<a href="./index.html">
 								<img src="img/wikipedia-logo.png">
 							</a>
 						</div>
 					</div>
-					<form  id="search" action="./search.html" method="GET" autocomplete="off">
-						<div class="search-wrapper">
-							<div class="search">
+					<form  id="search-form" action="./search.html" method="GET" autocomplete="off" enctype="text/plain">
+						<div id="search-wrapper">
+							<div id="search">
 								<input type="text" name="q" autofocus>
+								<i type="submit" class="fas fa-search" onclick="javascript:document.forms[0].submit()"></i>
 							</div>
 						</div>
 					</form>
@@ -34,15 +37,15 @@
 			</div>
 
 
-			<div class="results-wrapper">
-				<div class="results">
-					<div class="result-count">
-						<p>About 3,000,000 results...</p>
+			<div id="results-wrapper">
+				<div id="results">
+					<div id="result-count">
+						<p>No results found...</p>
 					</div>
 				</div>
 			</div>
-			<div class="footer-wrapper">
-				<div class="footer">
+			<div id="footer-wrapper">
+				<div id="footer">
 					
 				</div>
 			</div>

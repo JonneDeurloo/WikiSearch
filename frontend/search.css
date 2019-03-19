@@ -1,157 +1,179 @@
-body, html{
-    width: 100%;
-    min-width: 750px;
-	height: 100%;
-	margin: 0;
-	padding: 0;
-	background-color: #FFF;
+body,
+html {
+  width: 100%;
+  min-width: 750px;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: #fff;
 }
 
-.container {
-	height: 100%;
-	width: 100%;
-	margin: 0;
-	padding: 0;
+#container {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
 }
 
-.wrapper {
-	height: 100%;
-	width: 100%;
-	margin: 0;
-	padding: 0;
+#wrapper {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
 }
 
-.header-wrapper {
-	height: 120px;
-	width: 100%;
-	border-bottom: solid 1px #EEE;
-	background-color: #FFF;
+#header-wrapper {
+  height: 120px;
+  width: 100%;
+  border-bottom: solid 1px #eee;
+  background-color: #fff;
 }
 
-.header {
-	height: 100px;
-	padding: 10px;
+#header {
+  height: 100px;
+  padding: 10px;
 }
 
-.logo-wrapper {
-	width: auto;
-	height: 100px;
-	float: left;
-	margin: 0 65px 0 35px;
+#logo-wrapper {
+  width: auto;
+  height: 100px;
+  float: left;
+  margin: 0 65px 0 35px;
 }
-.logo {
-	height: 100%;
+#logo {
+  height: 100%;
 }
-.logo a {
-	height: 100%;
-	display: flex;
-	justify-content: center;
-	align-items: center;
+#logo a {
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
-.logo img {
-	height: 80%;
-}
-
-form, .search-wrapper {
-	float: left;
-	height: 100%;
-	width: 510px;
+#logo img {
+  height: 80%;
 }
 
-.search {
-	width: 100%;
-	height: 100%;
-	display: flex;
-	align-items: center;
+#search-form {
+  float: left;
+  height: 100%;
+  width: 30%;
+  min-width: 500px;
 }
-.search input {
-	font-size: 16px;
-	height: 36px;
-	width: 100%;
-	padding: 6px 16px;
-	margin: 12px 0;
-	display: inline-block;
-	border: 1px solid #ccc;
-	border-radius: 100px;
-	box-sizing: border-box;
+#search-wrapper {
+  width: 100%;
+  height: 100%;
 }
 
-.search input:focus {
-	outline: none;
+#search {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+#search input {
+  font-size: 16px;
+  height: 42px;
+  width: 100%;
+  padding: 6px 16px;
+  margin: 12px 0;
+  display: inline-block;
+  border: 1px solid #ccc;
+  border-radius: 100px;
+  box-sizing: border-box;
 }
 
-
-.results-wrapper {
-	width: 100%;
-	font-family: Arial, Helvetica, sans-serif;
+#search input:focus {
+  outline: none;
 }
 
-.results {
-	padding: 0 200px;
-	height: 100%;
+#search:hover input {
+	box-shadow: 0 2px 4px 0 rgba(0,0,0,0.16), 0 0 0 1px rgba(0,0,0,0.08);
 }
 
-.result-count {
-	width: 100%;
+#search i {
+  margin-left: -45px;
+  color: #aaa;
+  float: right;
+  padding: 15px;
+  border-radius: 100px;
 }
 
-.result-count p {
-	color: #777;
-	margin-bottom: 0;
-	font-size: 0.8em;
+#search i:hover {
+  cursor: pointer;
+  color: #777;
+}
+
+#results-wrapper {
+  width: 100%;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+#results {
+  padding: 0 200px;
+  height: 100%;
+}
+
+#result-count {
+  width: 100%;
+}
+
+#result-count p {
+  color: #777;
+  margin-bottom: 0;
+  font-size: 0.8em;
 }
 
 .result-wrapper {
-    width: 38%;
-    min-width: 500px; 
-	height: auto;
-	padding: 1px 0;
+  width: 38%;
+  min-width: 500px;
+  height: auto;
+  padding: 1px 0;
 }
 
 .result-header a {
-	text-decoration: none;
+  text-decoration: none;
 }
 
 .result-header h3 {
-	color: #1a0dab;
-	font-size: 1.1em;
-	margin-bottom: 3px;
-	font-weight: normal;
+  color: #1a0dab;
+  font-size: 1.1em;
+  margin-bottom: 3px;
+  font-weight: normal;
 }
 
 .result-header p {
-	margin: 0 0 5px 0;
-	color: #006621;
-	font-size: 0.9em;
+  margin: 0 0 5px 0;
+  color: #006621;
+  font-size: 0.9em;
 }
 
 .result-text {
-	font-size: 0.8em;
-	color: #555;
-	margin: 0 0 10px 0;
+  font-size: 0.8em;
+  color: #555;
+  margin: 0 0 10px 0;
 }
 
 .result-topics {
-	font-size: 0.8em;
-	color: #555;
+  font-size: 0.8em;
+  color: #555;
 }
 
 .result-topics .topic {
-	display: inline-block;
-	margin: 0 10px 10px 0;
+  display: inline-block;
+  margin: 0 10px 10px 0;
 }
 
 .result-stats {
-	font-size: 0.8em;
-	color: #1a0dab;
+  font-size: 0.8em;
+  color: #1a0dab;
 }
 
 .result-stats .stats {
-	display: inline-block;
-	margin: 0 20px 10px 0;
+  display: inline-block;
+  margin: 0 20px 10px 0;
 }
 
-.footer-wrapper {
-	width: 100%;
-	height: 100px;
+#footer-wrapper {
+  width: 100%;
+  height: 100px;
 }

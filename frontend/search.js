@@ -7,16 +7,17 @@ $(document).ready(function() {
 var searchArticles = function searchArticles() {
     var query = getUrlParameter('q');
 
+    $('#search input').val(replacePlus(query, ' '));
+
     $.ajax({
         type: 'GET',
-        url: backendServer + 'search?q=' + query,
+        url: backendServer + 'search?q=' + replacePlus(query),
         success: function(articles) {
             $.each(articles, function(i, article) {
                 var htmlArticle = createArticle(article);
-                $('.results').append(htmlArticle);
+                $('#results').append(htmlArticle);
             });
-            $('.search input').val(query);
-            $('.result-count p').html('About ' + articles.length + ' search results')
+            $('#result-count p').html('About ' + articles.length + ' search results')
         },
         error: function(e) {
             console.log(e)
@@ -34,10 +35,14 @@ var getUrlParameter = function getUrlParameter(sParam) {
         sParameterName = sURLVariables[i].split('=');
 
         if (sParameterName[0] === sParam) {
-            return sParameterName[1] === undefined ? true : decodeURIComponent(sParameterName[1]);
+            return sParameterName[1] === undefined ? true : decodeURIComponent(sParameterName[1]).replace(/\++$/, "");
         }
     }
 };
+
+var replacePlus = function replacePlus(input, repl = ",") {
+    return input.replace(/\+/g, repl);
+}
 
 var createArticle = function createArticle(article) {
     return $([
