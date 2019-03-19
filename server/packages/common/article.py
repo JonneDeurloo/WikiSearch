@@ -2,7 +2,10 @@ import json
 
 
 class Article(object):
-    pagerank = 0.0
+    __pagerank = 0.0
+    __topics = []
+
+    # Add other variables if needed
 
     def __init__(self, id, title, text):
         self.id = id
@@ -14,9 +17,19 @@ class Article(object):
         data['id'] = self.id
         data['title'] = self.title
         data['text'] = self.text
-        data['pagerank'] = self.pagerank
+        data['pagerank'] = self.__pagerank
+        data['topics'] = self.__topics
 
         return data
 
     def set_pagerank(self, pagerank):
-        self.pagerank = pagerank
+        self.__pagerank = pagerank
+
+    def get_pagerank(self):
+        return self.__pagerank
+
+    def set_topics(self, topics):
+        self.__topics = topics
+
+    def get_topics(self):
+        return self.__topics

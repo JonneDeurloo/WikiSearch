@@ -1,28 +1,33 @@
 import sqlite3
 from sqlite3 import Error
+
 import networkx as nx
 import matplotlib.pyplot as plt
 import operator
 import os
+
 from ..common.article import Article
 
 
 def create_connection():
-    """ Create a database connection to a SQLite database """
+    """ Create a database connection to an SQLite database """
+    global db
+
     try:
         dir_path = os.path.dirname(os.path.realpath(__file__))
         db_path = os.path.join(dir_path, "test.db")
-        conn = sqlite3.connect(db_path)
-        return conn
+        db = sqlite3.connect(db_path)
     except Error as e:
         print(e)
 
 
-def create_table(db):
+def create_table_wiki():
+    """ Create wiki table (if not exists) """
+
     cursor = db.cursor()
     cursor.execute(
         '''
-		CREATE TABLE wiki(
+		CREATE TABLE IF NOT EXISTS wiki(
 			id 			INTEGER PRIMARY KEY,
 			name 		TEXT unique,
 			text 		TEXT,
@@ -32,7 +37,21 @@ def create_table(db):
     db.commit()
 
 
-def insert_dummy_data(db):
+def create_table_pagerank():
+    """ Create PageRank table (if not exists) """
+
+    cursor = db.cursor()
+    cursor.execute(
+        '''
+		CREATE TABLE IF NOT EXISTS pr(
+			id 			INTEGER PRIMARY KEY,
+			title 		TEXT unique,
+			pagerank	FLOAT)
+	    ''')
+    db.commit()
+
+
+def insert_dummy_data():
     wiki = [("A", "first letter alphabet", "The first letter of the alphabet.", "B,C"),
             ("B", "second letter alphabet",
              "The second letter of the alphabet.", "A,C"),
@@ -70,22 +89,35 @@ def insert_dummy_data(db):
     db.commit()
 
 
-def get_all_from_db(db):
+def get_all_from_wiki():
+    """ Get all values from the wiki table """
+
     cursor = db.cursor()
     cursor.execute('''SELECT name, links FROM wiki''')
     return cursor.fetchall()
 
 
 def sort_on_pagerank(data):
+    """ Sort articles based on their PageRank """
+
     sorted_articles = []
     for article in data:
-        article.set_pagerank(pr[article.title])
+        cursor = db.cursor()
+        cursor.execute(
+            '''SELECT pagerank FROM pr WHERE title=?''', (article.title))
+        value = cursor.fetchone()
+        article.set_pagerank(value)
         sorted_articles.append(article)
-    return sorted(sorted_articles, key=lambda x: x.pagerank, reverse=True)
+    return sorted(sorted_articles, key=lambda x: x.get_pagerank(), reverse=True)
 
 
-def create_graph(db):
-    all_rows = get_all_from_db(db)
+def create_graph():
+    """ Create a directed graph based on the Wikipedia article links"""
+
+    global G
+    G = nx.DiGraph()
+
+    all_rows = get_all_from_wiki()
 
     for row in all_rows:
         for elem in row[1].split(","):
@@ -93,8 +125,11 @@ def create_graph(db):
 
 
 def create_pagerank():
-    global pr 
+    """ Build the PageRank table """
+
     pr = nx.pagerank(G, alpha=0.9)
 
-
-G = nx.DiGraph()
+    cursor = db.cursor()
+    cursor.executemany(
+        '''INSERT INTO pr(title, pagerank) VALUES(?,?)''', list(pr.items()))
+    db.commit()

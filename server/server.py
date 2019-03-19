@@ -23,13 +23,32 @@ def hello():
 @cross_origin()
 def search():
     query = request.args.get('q', default='', type=str)
+    # queryList = query.split(',')
+
+    # get matching articles
+    # create connection with indexing database
     indexed = indexing.get_similar(query)
+
+    # find related articles
+    # create connection with topics database
     topics = tm.get_related(indexed)
-    db = pagerank.create_connection()
-    pagerank.create_graph(db)
-    pr = pagerank.create_pagerank()
+
+    # rank articles based on PageRank
+    pagerank.create_connection()
     ranked = pagerank.sort_on_pagerank(topics)
+
     return jsonify(create_json(ranked))
+
+
+@app.route("/pagerank")
+@cross_origin()
+def build_pagerank():
+    pagerank.create_connection()
+    pagerank.create_table_pagerank()
+    pagerank.create_graph()
+    pagerank.create_pagerank()
+
+    return get_succes_page("PageRank created!")
 
 
 def create_json(articles):
@@ -37,6 +56,10 @@ def create_json(articles):
     for article in articles:
         jsoned.append(article.get_json())
     return jsoned
+
+
+def get_succes_page(text):
+    f'<div style="position: absolute; top: 0; bottom: 0; left: 0; right: 0; display: flex; justify-content: center; align-items: center;">{text}</div>'
 
 
 if __name__ == '__main__':
