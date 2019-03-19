@@ -47,8 +47,16 @@ def build_pagerank():
     pagerank.create_table_pagerank()
     pagerank.create_graph()
     pagerank.create_pagerank()
-
     return get_succes_page("PageRank created!")
+
+
+@app.route("/wiki")
+@cross_origin()
+def build_wiki():
+    pagerank.create_connection()
+    pagerank.create_table_wiki()
+    pagerank.insert_dummy_data()
+    return get_succes_page("WikiDB created!")
 
 
 def create_json(articles):
@@ -59,7 +67,7 @@ def create_json(articles):
 
 
 def get_succes_page(text):
-    f'<div style="position: absolute; top: 0; bottom: 0; left: 0; right: 0; display: flex; justify-content: center; align-items: center;">{text}</div>'
+    return f"<div style='position: absolute; top: 0; bottom: 0; left: 0; right: 0; display: flex; justify-content: center; align-items: center;'>{text}</div>"
 
 
 if __name__ == '__main__':
