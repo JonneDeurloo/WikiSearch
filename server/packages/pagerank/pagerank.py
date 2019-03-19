@@ -4,13 +4,15 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import operator
 import os
+from ..common.article import Article
 
 
 def create_connection():
     """ Create a database connection to a SQLite database """
     try:
         dir_path = os.path.dirname(os.path.realpath(__file__))
-        conn = sqlite3.connect(dir_path + "/db/test.db")
+        db_path = os.path.join(dir_path, "test.db")
+        conn = sqlite3.connect(db_path)
         return conn
     except Error as e:
         print(e)
@@ -26,7 +28,7 @@ def create_table(db):
 			text 		TEXT,
 			first		TEXT,
 			links 		TEXT)
-	''')
+	    ''')
     db.commit()
 
 
@@ -74,11 +76,12 @@ def get_all_from_db(db):
     return cursor.fetchall()
 
 
-def sort_on_pagerank(pr, data):
-    return_dict = {}
-    for item in data:
-        return_dict[item] = pr[item]
-    return sorted(return_dict.items(), key=operator.itemgetter(1), reverse=True)
+def sort_on_pagerank(data):
+    sorted_articles = []
+    for article in data:
+        article.set_pagerank(pr[article.title])
+        sorted_articles.append(article)
+    return sorted(sorted_articles, key=lambda x: x.pagerank, reverse=True)
 
 
 def create_graph(db):
@@ -90,6 +93,8 @@ def create_graph(db):
 
 
 def create_pagerank():
-    return nx.pagerank(G, alpha=0.9)
+    global pr 
+    pr = nx.pagerank(G, alpha=0.9)
+
 
 G = nx.DiGraph()
