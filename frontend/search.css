@@ -52,7 +52,7 @@ body, html{
 	height: 80%;
 }
 
-.search-wrapper {
+form, .search-wrapper {
 	float: left;
 	height: 100%;
 	width: 510px;
