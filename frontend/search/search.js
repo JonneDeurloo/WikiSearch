@@ -51,7 +51,7 @@ var createArticle = function createArticle(article) {
                 '<div class="result-header">',
                     '<a href="https://en.wikipedia.org/wiki/' + article.title + '">',
                         '<h3>Wikipedia Article: ' + article.title + '</h1>',
-                        '<p>https://en.wikipedia.org/wiki/' + article.title + '</p>',
+                        '<p>https://en.wikipedia.org/wiki/' + ((article.title).replace(/\s/g, '_')).replace(/[!'()*]/g, escape) + '</p>',
                     '</a>',
                 '</div>',
                 '<div class="result-source">',
