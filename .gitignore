@@ -116,3 +116,7 @@ dmypy.json
 
 # Visual Studio Code
 .vscode/*
+
+/server/packages/common/dataset
+
+*.db
