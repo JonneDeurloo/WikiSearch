@@ -38,7 +38,6 @@ def search():
 
 
 @app.route("/pagerank")
-@cross_origin()
 def build_pagerank():
     pagerank.create_connection()
     pagerank.create_table_pagerank()
@@ -47,7 +46,6 @@ def build_pagerank():
 
 
 @app.route("/wiki")
-@cross_origin()
 def build_wiki():
     pagerank.create_connection()
     pagerank.create_table_wiki()
