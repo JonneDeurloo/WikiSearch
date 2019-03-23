@@ -49,25 +49,33 @@ var createArticle = function createArticle(article) {
         '<div class="result-wrapper">',
             '<div class="result">',
                 '<div class="result-header">',
-                    '<a href="https://en.wikipedia.org/wiki/' + article.title + '">',
-                        '<h3>Wikipedia Article: ' + article.title + '</h1>',
+                    '<a href="https://en.wikipedia.org/wiki/' + ((article.title).replace(/\s/g, '_')).replace(/[!'()*]/g, escape) + '">',
+                        '<h3>' + article.title + '</h1>',
                         '<p>https://en.wikipedia.org/wiki/' + ((article.title).replace(/\s/g, '_')).replace(/[!'()*]/g, escape) + '</p>',
                     '</a>',
                 '</div>',
                 '<div class="result-source">',
                     '<p class="result-text">' + article.text + '. The text gathered from the backend is just one word, that is why I wrote this long sentence.</p>',
                     '<div class="result-topics">',
-                        '<p class="topic">Topic 1</p>',
-                        '<p class="topic">Topic 2</p>',
-                        '<p class="topic">Topic 3</p>',
+                        getTopics(article),
                     '</div>',
                     '<div class="result-stats">',
-                        '<p class="stats">Stats: 12%</p>',
+                        '<p class="stats">Cosine Similarity:' + article.cosine_sim + '</p>',
                         '<p class="stats">PageRank: ' + article.pagerank + '</p>',
-                        '<p class="stats">Linking Index: 12</p>',
+                        '<p class="stats">Harmonic Mean:' + article.harmonic_mean + '</p>',
                     '</div>',
                 '</div>',
             '</div>',
         '</div>'
     ].join("\n"));
+}
+
+var getTopics = function getTopics(article) {
+    topics = "";
+
+    $.each(article.topics, function(i, topic) {
+        topics += '<p class="topic">' + topic + '</p>';
+    });
+
+    return topics;
 }
