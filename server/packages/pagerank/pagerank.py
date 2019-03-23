@@ -115,6 +115,6 @@ def sort_on_pagerank(data):
         cursor = db.cursor()
         cursor.execute("SELECT pagerank FROM pr WHERE title=(?)", (article.title,))
         value = cursor.fetchone()
-        article.set_pagerank(value)
+        article.set_pagerank(value[0])
         sorted_articles.append(article)
     return sorted(sorted_articles, key=lambda x: x.get_pagerank(), reverse=True)
