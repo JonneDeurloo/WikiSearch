@@ -1,14 +1,31 @@
 var backendServer = 'http://127.0.0.1:5000/';
 
 $(document).ready(function() {
+    // Validate Enter Press
+    $( "#search-form" ).submit(function( event ) {
+        validate();
+        event.preventDefault();
+    });
+
+    // Search for articles
     searchArticles();
 });
 
-var searchArticles = function searchArticles() {
+/** Validate form */
+function validate() {
+    if ( $('.search-bar input').val().trim() !== "" ) {
+        document.forms[0].submit();
+    }
+}
+
+/** Query the server for search results */
+function searchArticles() {
     var query = getUrlParameter('q');
+    var start = new Date().getTime();
 
     $('#search input').val(replacePlus(query, ' '));
 
+    // Send request to the server
     $.ajax({
         type: 'GET',
         url: backendServer + 'search?q=' + replacePlus(query),
@@ -17,7 +34,9 @@ var searchArticles = function searchArticles() {
                 var htmlArticle = createArticle(article);
                 $('#results').append(htmlArticle);
             });
-            $('#result-count p').html('About ' + articles.length + ' search results')
+
+            var end = new Date().getTime();
+            $('#result-count p').html('About ' + articles.length + ' search results (' + (end - start) / 1000 + ' seconds)');
         },
         error: function(e) {
             console.log(e)
@@ -25,7 +44,8 @@ var searchArticles = function searchArticles() {
     });
 }
 
-var getUrlParameter = function getUrlParameter(sParam) {
+/** Get parameters from the URL */
+function getUrlParameter(sParam) {
     var sPageURL = window.location.search.substring(1),
         sURLVariables = sPageURL.split('&'),
         sParameterName,
@@ -40,22 +60,20 @@ var getUrlParameter = function getUrlParameter(sParam) {
     }
 };
 
-var replacePlus = function replacePlus(input, repl = ",") {
-    return input.replace(/\+/g, repl);
-}
-
-var createArticle = function createArticle(article) {
+/** Create article html object */
+function createArticle(article) {
+    var url = 'https://en.wikipedia.org/wiki/' + escapeHTML(article.title);
     return $([
         '<div class="result-wrapper">',
             '<div class="result">',
                 '<div class="result-header">',
-                    '<a href="https://en.wikipedia.org/wiki/' + ((article.title).replace(/\s/g, '_')).replace(/[!'()*]/g, escape) + '">',
+                    '<a href="' + url + '">',
                         '<h3>' + article.title + '</h1>',
-                        '<p>https://en.wikipedia.org/wiki/' + ((article.title).replace(/\s/g, '_')).replace(/[!'()*]/g, escape) + '</p>',
+                        '<p>' + url + '</p>',
                     '</a>',
                 '</div>',
                 '<div class="result-source">',
-                    '<p class="result-text">' + article.text + '. The text gathered from the backend is just one word, that is why I wrote this long sentence.</p>',
+                    '<p class="result-text">' + article.text + '</p>',
                     '<div class="result-topics">',
                         getTopics(article),
                     '</div>',
@@ -70,7 +88,21 @@ var createArticle = function createArticle(article) {
     ].join("\n"));
 }
 
-var getTopics = function getTopics(article) {
+
+// Helper functions
+
+/** Replaces plus in string with replacement */ 
+function replacePlus(input, repl = ",") {
+    return input.replace(/\+/g, repl);
+}
+
+/** Escape characters to HTML format */
+function escapeHTML(input) {
+    return (input.replace(/\s/g, '_')).replace(/[!'*]/g, escape);
+}
+
+/** Get <p> tag list of topics from article */
+function getTopics(article) {
     topics = "";
 
     $.each(article.topics, function(i, topic) {
