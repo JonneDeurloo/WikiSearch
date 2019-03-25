@@ -40,7 +40,6 @@ def search():
 @app.route("/pagerank")
 def build_pagerank():
     pagerank.create_connection()
-    pagerank.create_table_pagerank()
     pagerank.create_pagerank()
     return get_succes_page("PageRank created!")
 
