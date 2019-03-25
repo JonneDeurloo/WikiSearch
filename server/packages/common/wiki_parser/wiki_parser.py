@@ -5,6 +5,9 @@
   Script to convert a xml mediawiki history dump to a csv file with readable useful data
 for pandas processing.
   Copyright 2017-2019 Abel 'Akronix' Serrano Juste <akronix5@gmail.com>
+
+  Lines 106 to 194 are added by Jonne Deurloo
+  The rest of the code has a few minor changes to work with links
 """
 
 import xml.parsers.expat
@@ -22,7 +25,7 @@ def xml_to_csv(filename):
     ### BEGIN xmt_to_csv var declarations ###
     # Shared variables for parser subfunctions:
     ## output_csv, _current_tag, _parent
-    # page_id,page_title,page_ns,revision_id,timestamp,contributor_id,contributor_name,bytes_var
+    # page_title,page_links
 
     output_csv = None
     _parent = None
@@ -81,7 +84,7 @@ def xml_to_csv(filename):
         if tag == 'revision':
 
             revision_row = [page_title, make_list(
-                remove_non_links(filter_links(page_links)))]
+                remove_non_links(filter_links(page_links, page_title)))]
 
             # Do not print (skip) revisions that has any of the fields not available
             if not has_empty_field(revision_row):
@@ -100,13 +103,15 @@ def xml_to_csv(filename):
 
         _current_tag = ''  # Very important!!! Otherwise blank "orphan" data between tags remain in _current_tag and trigger data_handler!! >:(
 
-    def filter_links(text):
+    def filter_links(text, title):
         start_symbols = ['<!--', '<ref',
                          '<code', '<source', '<syntaxhighlight']
         end_symbols = ['-->', '</ref>', '</code>',
-                       '</source>', '</syntaxhighlight>']
+                       '</source>', '</syntaxhighlight>', '/>']
 
         text = text.replace('[[', ' [[').replace(']]', ']] ')
+        text = text.replace('<br>', ' ')
+        text = text.replace('<br', '<ref ')
 
         for start_symbol in start_symbols:
             text = text.replace(start_symbol, ' ' + start_symbol)
@@ -120,14 +125,26 @@ def xml_to_csv(filename):
         else:
             return_txt = []
             link = 0
-            skip = 0 
+            skip = 0
+            start = end = None
             for word in split:
-                if starts_with(word, start_symbols):
+                start = start if isinstance(start, int) else starts_with(word, start_symbols)
+ 
+                if isinstance(start, int) and (start == starts_with(word, start_symbols)):
                     skip += 1
                     continue
-                if ends_with(word, end_symbols):
+
+                end = ends_with(word, end_symbols)
+                if isinstance(end, int) and (end == start):
                     skip -= 1
+                    end = start = None
                     continue
+
+                if (end == 5):
+                    skip -= 1
+                    end = start = None
+                    continue
+
                 if skip == 0:
                     if word.startswith('[['):
                         link += 1
@@ -149,7 +166,7 @@ def xml_to_csv(filename):
                          '[[Image:', '[[Wikipedia:', '[[wikt:']
 
         for word in split:
-            if starts_with(word, start_symbols):
+            if isinstance(starts_with(word, start_symbols), int):
                 other += 1
                 if word.endswith(']]'):
                     other -= 1
@@ -161,7 +178,7 @@ def xml_to_csv(filename):
                 return_txt.append(word)
 
             if word.endswith(']]'):
-                if not other == 0:
+                if other != 0:
                     other -= 1
 
         return ' '.join(return_txt).replace('?', '')
@@ -176,18 +193,18 @@ def xml_to_csv(filename):
         return ' // '.join(return_txt)
 
     def starts_with(word, elements):
-        for elem in elements:
+        for idx, elem in enumerate(elements):
             if word.startswith(elem):
-                return True
+                return idx
 
-        return False
+        return None
 
     def ends_with(word, elements):
-        for elem in elements:
+        for idx, elem in enumerate(elements):
             if word.endswith(elem):
-                return True
+                return idx
 
-        return False
+        return None
 
     ### BEGIN xml_to_csv body ###
 
