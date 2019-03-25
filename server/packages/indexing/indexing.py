@@ -2,12 +2,13 @@
 
 import sys
 import os
+import csv
 import json
 import string
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 from ..dbmanager import dbmanager as DBM
-
+from ..common.wiki_parser import wiki_parser as wp
 
 
 
@@ -30,27 +31,18 @@ def create_table_wiki():
 		CREATE TABLE IF NOT EXISTS wiki(
 			id 			INTEGER PRIMARY KEY,
 			term 		TEXT unique,
-			counter     INTEGER, 
-		    indexes		TEXT)
+			counter 	INTEGER,
+            indexes     TEXT)
 	    ''')
     db.commit()
 
 
-def create_table_pagerank():
-    """ Create indexing table (if not exists) """
-
+def table_wiki_exists():
     cursor = db.cursor()
     cursor.execute(
-        '''DROP TABLE IF EXISTS `index`''')
-    cursor.execute(
-        '''
-		CREATE TABLE IF NOT EXISTS index(
-			id 			INTEGER PRIMARY KEY,
-			term 		TEXT unique,
-			counter     INTEGER, 
-		    indexes		TEXT)
-	    ''')
-    db.commit()
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='wiki'")
+    table = cursor.fetchone()
+    return table != None
 
 
 def get_all_from_wiki():
@@ -84,16 +76,35 @@ def create_wiki(file):
         db.commit()
 
 
-def create_pagerank():
-    """ Build the PageRank table """
+def create_indexing():
+   """ Build the indexing table """
 
-    __create_graph()
-    pr = nx.pagerank(G, alpha=0.9)
+   if not table_wiki_exists():
+       create_table_wiki()
+       create_wiki('enwiki-20190301')
 
-    cursor = db.cursor()
-    cursor.executemany(
-        '''INSERT INTO pr(title, pagerank) VALUES(?,?)''', list(pr.items()))
-    db.commit()
+   __create_graph()
+   pr = nx.pagerank(G, alpha=0.9)
+
+   cursor = db.cursor()
+   cursor.executemany(
+       '''UPDATE wiki SET pagerank = ? WHERE title = ?''', [t[::-1] for t in list(pr.items())])
+   db.commit()
+
+
+
+
+def indexdict_to_string(mydict):
+
+    for k1, v1 in mydict.items():
+        index_string = ''
+        for k2, v2 in mydict[k1][1].items():
+            temp = "{}:{} ".format(k2, v2)
+            index_string += temp
+        index_string = index_string[:-1]
+        mydict[k1][1] = index_string
+
+    return mydict
 
 
 def article_title_list(file):
@@ -201,13 +212,15 @@ def index_articles(article_text, article_title):
 file_articles = "articles_in_plain_text_test1.txt"
 file_titles = "article_titles.txt"
 inv_index = index_articles(file_articles, file_titles)
+test = indexdict_to_string(inv_index)
+
+print(test)
+#print(inv_index)
 
 exDict = {'exDict': inv_index}
 
 with open('test.txt', 'w') as file:
      file.write(json.dumps(exDict))
-
-print(inv_index)
 
 
 
