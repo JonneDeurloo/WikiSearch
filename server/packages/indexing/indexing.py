@@ -3,13 +3,6 @@ import sys
 import os
 from nltk.corpus import stopwords
 
-#def get_similar(query):
-#    a1 = Article(1, query, "This is the first result")
-#    a2 = Article(2, "B", "This is the second result")
-#    a3 = Article(3, "D", "This is the thirth result")
-#    a4 = Article(4, "P", "This is the fourth result")
-#    return [a1, a2, a3, a4]
-
 def article_list(file):
 
     articles = []
@@ -47,3 +40,16 @@ print("=========================================================================
 print(art[1])
 print("================================================================================================================================")
 print(art[2])
+
+
+
+
+
+#from ..common.article.article import Article
+
+#def get_similar(query):
+#    a1 = Article(1, query, "This is the first result")
+#    a2 = Article(2, "Planet", "This is the second result")
+#    a3 = Article(3, "Mars", "This is the thirth result")
+#    a4 = Article(4, "Jupiter", "This is the fourth result")
+#    return [a1, a2, a3, a4]

@@ -5,8 +5,6 @@ from packages.clustering import clustering
 from packages.indexing import indexing
 from packages.topic_modeling import topic_modeling as tm
 
-from packages.common.article import Article
-
 from flask import Flask, jsonify, request
 from flask_cors import CORS, cross_origin
 app = Flask(__name__)
@@ -36,26 +34,22 @@ def search():
     # rank articles based on PageRank
     pagerank.create_connection()
     ranked = pagerank.sort_on_pagerank(topics)
-
     return jsonify(create_json(ranked))
 
 
 @app.route("/pagerank")
-@cross_origin()
 def build_pagerank():
     pagerank.create_connection()
     pagerank.create_table_pagerank()
-    pagerank.create_graph()
     pagerank.create_pagerank()
     return get_succes_page("PageRank created!")
 
 
 @app.route("/wiki")
-@cross_origin()
 def build_wiki():
     pagerank.create_connection()
     pagerank.create_table_wiki()
-    pagerank.insert_dummy_data()
+    pagerank.create_wiki('enwiki-20190301')
     return get_succes_page("WikiDB created!")
 
 

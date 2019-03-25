@@ -1,8 +1,7 @@
-from ..common.article import Article
+from ..common.article.article import Article
 
 def get_related(articles):
-    related = []
-    #for article in articles:
-    a = Article(6, 'F', 'This is the nth result')
-    related.append(a)
-    return articles + related
+    articles += [Article(6, 'Sun', 'This is the nth result')]
+    for article in articles:
+        article.set_topics([article.title, "Another one", "Another one"])
+    return articles
