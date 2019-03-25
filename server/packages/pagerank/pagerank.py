@@ -30,25 +30,18 @@ def create_table_wiki():
 		CREATE TABLE IF NOT EXISTS wiki(
 			id 			INTEGER PRIMARY KEY,
 			title 		TEXT unique,
-			links 		TEXT)
+			links 		TEXT,
+            pagerank    FLOAT DEFAULT 0.0)
 	    ''')
     db.commit()
 
 
-def create_table_pagerank():
-    """ Create PageRank table (if not exists) """
-
+def table_wiki_exists():
     cursor = db.cursor()
     cursor.execute(
-        '''DROP TABLE IF EXISTS `pr`''')
-    cursor.execute(
-        '''
-		CREATE TABLE IF NOT EXISTS pr(
-			id 			INTEGER PRIMARY KEY,
-			title 		TEXT unique,
-			pagerank	FLOAT)
-	    ''')
-    db.commit()
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='wiki'")
+    table = cursor.fetchone()
+    return table != None
 
 
 def get_all_from_wiki():
@@ -85,12 +78,16 @@ def create_wiki(file):
 def create_pagerank():
     """ Build the PageRank table """
 
+    if not table_wiki_exists():
+        create_table_wiki()
+        create_wiki('enwiki-20190301')
+
     __create_graph()
     pr = nx.pagerank(G, alpha=0.9)
 
     cursor = db.cursor()
     cursor.executemany(
-        '''INSERT INTO pr(title, pagerank) VALUES(?,?)''', list(pr.items()))
+        '''UPDATE wiki SET pagerank = ? WHERE title = ?''', [t[::-1] for t in list(pr.items())])
     db.commit()
 
 
@@ -113,8 +110,10 @@ def sort_on_pagerank(data):
     sorted_articles = []
     for article in data:
         cursor = db.cursor()
-        cursor.execute("SELECT pagerank FROM pr WHERE title=(?)", (article.title,))
+        cursor.execute(
+            "SELECT pagerank FROM wiki WHERE title=?", (article.title,))
         value = cursor.fetchone()
+        print(article.title, value)
         article.set_pagerank(value[0])
         sorted_articles.append(article)
     return sorted(sorted_articles, key=lambda x: x.get_pagerank(), reverse=True)
