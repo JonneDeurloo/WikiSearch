@@ -1,45 +1,224 @@
 #from ..common.article import Article
+
 import sys
 import os
+import json
+import string
 from nltk.corpus import stopwords
+from nltk.stem import PorterStemmer
+from ..dbmanager import dbmanager as DBM
 
+
+
+
+def create_connection():
+    """ Create a database connection to an SQLite database """
+
+    global db
+
+    db = DBM.create_connection('indexing')
+
+
+def create_table_wiki():
+    """ Create wiki table (if not exists) """
+
+    cursor = db.cursor()
+    cursor.execute(
+        '''DROP TABLE IF EXISTS `wiki`''')
+    cursor.execute(
+        '''
+		CREATE TABLE IF NOT EXISTS wiki(
+			id 			INTEGER PRIMARY KEY,
+			term 		TEXT unique,
+			counter     INTEGER, 
+		    indexes		TEXT)
+	    ''')
+    db.commit()
+
+
+def create_table_pagerank():
+    """ Create indexing table (if not exists) """
+
+    cursor = db.cursor()
+    cursor.execute(
+        '''DROP TABLE IF EXISTS `index`''')
+    cursor.execute(
+        '''
+		CREATE TABLE IF NOT EXISTS index(
+			id 			INTEGER PRIMARY KEY,
+			term 		TEXT unique,
+			counter     INTEGER, 
+		    indexes		TEXT)
+	    ''')
+    db.commit()
+
+
+def get_all_from_wiki():
+    """ Get all values from the wiki table """
+
+    cursor = db.cursor()
+    cursor.execute('''SELECT term, counter, indexes FROM wiki''')
+    return cursor.fetchall()
+
+
+def create_wiki(file):
+    """ Build the Wiki table """
+
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    file_path = os.path.join(dir_path, f'..\common\dataset\{file}\{file}')
+
+    wp.xml_to_csv(file_path + '.xml')
+
+    with open(file_path + '.csv', encoding="utf8") as csvfile:
+        wikireader = csv.DictReader(csvfile, delimiter='?', quotechar='|')
+        wiki_insert = []
+        for row in wikireader:
+            if (len(tuple(row.values())) > 2):
+                print(tuple(row.values()))  # Should not happen
+
+            wiki_insert.append(tuple(row.values()))
+
+        cursor = db.cursor()
+        cursor.executemany(
+            '''INSERT INTO wiki(title, links) VALUES(?,?)''', wiki_insert)
+        db.commit()
+
+
+def create_pagerank():
+    """ Build the PageRank table """
+
+    __create_graph()
+    pr = nx.pagerank(G, alpha=0.9)
+
+    cursor = db.cursor()
+    cursor.executemany(
+        '''INSERT INTO pr(title, pagerank) VALUES(?,?)''', list(pr.items()))
+    db.commit()
+
+
+def article_title_list(file):
+
+    titles = []
+    # read the file
+    with open(file, 'r', encoding="utf8") as tf:
+        index = 0
+        # read each line
+        for line in tf:
+            newline = line.replace('\n', '')
+            newline = newline.lower()
+            newline = newline.translate(str.maketrans(string.punctuation, ' '*len(string.punctuation)))
+            newline_split = newline.split(' ')
+
+            ps = PorterStemmer()
+            newline_stemmed = [ps.stem(word) for word in newline_split if word != '']
+
+            titles.append(newline_stemmed)
+
+    # return all the articles
+    return titles
+
+
+
+# makes a text file into a list of articles
 def article_list(file):
 
     articles = []
+    # read the file
     with open(file, 'r', encoding="utf8") as tf:
         index = 0
+        # read each line
         for line in tf:
+            # delete enters and tabs
             line = line.replace('\n', ' ').replace('\t', ' ')
+            # split the text into the first word and the rest
             split = line.split(' ', 1)
+            # check if it is a new article
             if split[0] == '#Article:':
-                #print('Article line')
+                # if so add it so a new element in the list and update the index
                 articles.append(split[1])
                 index += 1
+            # else if whitelines or (sub)titles don't check but continue
             elif line == ' ' or line[0] == '#':
                 continue
+            # else add the line to the current element in the list
             else:
-                #print('Normal line')
                 articles[index-1] += line
 
+    # return all the articles
     return articles
 
+
+# tokenizes the whole text article
 def tokenize_article(art_text):
 
-    en_stops = stopwords.words('english')
+    # transform the text by lowering, removing punctuation and stopwords, and stemming the text
     art_text = art_text.lower()
+    art_text = art_text.translate(str.maketrans(string.punctuation, ' '*len(string.punctuation)))
+    token_art_text = art_text.split(' ')
 
-    text_arr = art_text.split(' ')
+    stop_words = stopwords.words('english')
+    ps = PorterStemmer()
+    token_art_text = [ps.stem(word) for word in token_art_text if word not in stop_words and word != '']
+
+    #return the tokenized article
+    return token_art_text
+
+
+# invert index the text articles
+def index_articles(article_text, article_title):
+
+    index_dict = {}
+    titles = article_title_list(article_title)
+    articles = article_list(article_text)
+    #for counter, title in enumerate(titles):
+    #    print('Doing new title', counter, '...')
+    #    for token in title:
+    #        if token not in index_dict:
+    #            index_dict[token] = [1, {}]
+    #            index_dict[token][1][counter] = 1
+    #        else:
+    #            index_dict[token][0] += 1
+    #            if counter in index_dict[token][1]:
+    #                index_dict[token][1][counter] += 1
+    #            else:
+    #                index_dict[token][1][counter] = 1
+    for counter, art in enumerate(articles):
+        print('Doing new article', counter, '...')
+        tokens = tokenize_article(art)
+        for token in tokens:
+            if token not in index_dict:
+                index_dict[token] = [1, {}]
+                index_dict[token][1][counter] = 1
+            else:
+                index_dict[token][0] += 1
+                if counter in index_dict[token][1]:
+                    index_dict[token][1][counter] += 1
+                else:
+                    index_dict[token][1][counter] = 1
+
+    return index_dict
+
+file_articles = "articles_in_plain_text_test1.txt"
+file_titles = "article_titles.txt"
+inv_index = index_articles(file_articles, file_titles)
+
+exDict = {'exDict': inv_index}
+
+with open('test.txt', 'w') as file:
+     file.write(json.dumps(exDict))
+
+print(inv_index)
 
 
 
 
-file = "articles_in_plain_text.txt"
-art = article_list(file)
-print(art[0])
-print("================================================================================================================================")
-print(art[1])
-print("================================================================================================================================")
-print(art[2])
+#file = "articles_in_plain_text_test.txt"
+#art = article_list(file)
+#print(tokenize_article(art[0]))
+#print("================================================================================================================================")
+#print(art[1])
+#print("================================================================================================================================")
+#print(art[2])
 
 
 
