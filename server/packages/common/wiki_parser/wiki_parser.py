@@ -19,7 +19,12 @@ Debug = False
 
 csv_separator = "?"
 
+start_ignore = ["|Armed forces of ", "|Demography of ", "|Demographics of ", "|Economy of ", "|Foreign relations of ", "|Geography of ", "|Government of ",
+                 "|History of ", "|Index of ", "|List of ", "|Military of ", "|Outline of ", "|Politics of ", "|Telecommunications in " "|Timeline of ", "|Transport in", "|Wikipedia:"]
+end_ignore = ["(disambiguation)|", 'bibliography|', 'discography|']
 
+start_symbols = ['<!--', '<ref',   '<code',   '<source',   '<syntaxhighlight']
+end_symbols   = ['-->',  '</ref>', '</code>', '</source>', '</syntaxhighlight>', '/>']
 def xml_to_csv(filename):
 
     ### BEGIN xmt_to_csv var declarations ###
@@ -87,7 +92,7 @@ def xml_to_csv(filename):
                 remove_non_links(filter_links(page_links, page_title)))]
 
             # Do not print (skip) revisions that has any of the fields not available
-            if not has_empty_field(revision_row):
+            if (not has_empty_field(revision_row)) and (not is_unwanted_title(page_title)):
                 output_csv.write(csv_separator.join(revision_row) + '\n')
             # else:
                 # print(
@@ -103,24 +108,22 @@ def xml_to_csv(filename):
 
         _current_tag = ''  # Very important!!! Otherwise blank "orphan" data between tags remain in _current_tag and trigger data_handler!! >:(
 
+    def is_unwanted_title(t):
+        return isinstance(starts_with(t, start_ignore), int) or (isinstance(ends_with(t, end_ignore), int) and len(t.split()) > 1)
+    
     def filter_links(text, title):
-        start_symbols = ['<!--', '<ref',
-                         '<code', '<source', '<syntaxhighlight']
-        end_symbols = ['-->', '</ref>', '</code>',
-                       '</source>', '</syntaxhighlight>', '/>']
-
         text = text.replace('[[', ' [[').replace(']]', ']] ')
         text = text.replace('<br>', ' ')
         text = text.replace('<br', '<ref ')
 
         for start_symbol in start_symbols:
-            text = text.replace(start_symbol, ' ' + start_symbol)
+            text = text.replace(start_symbol, ' ' + start_symbol + ' ')
         for end_symbol in end_symbols:
             text = text.replace(end_symbol, end_symbol + ' ')
 
         split = text.split(' ')
 
-        if (split[0] == '#REDIRECT'):
+        if (split[0].upper() == '#REDIRECT'):
             return ''
         else:
             return_txt = []
@@ -128,12 +131,13 @@ def xml_to_csv(filename):
             skip = 0
             start = end = None
             for word in split:
-                start = start if isinstance(start, int) else starts_with(word, start_symbols)
- 
+                start = start if isinstance(
+                    start, int) else starts_with(word, start_symbols)
+                
                 if isinstance(start, int) and (start == starts_with(word, start_symbols)):
                     skip += 1
                     continue
-
+                
                 end = ends_with(word, end_symbols)
                 if isinstance(end, int) and (end == start):
                     skip -= 1
@@ -190,6 +194,7 @@ def xml_to_csv(filename):
         for word in text.split(']] [['):
             return_txt.append(word.split('|')[0])
 
+        return_txt = [title for title in return_txt if not is_unwanted_title(title)]
         return ' // '.join(return_txt)
 
     def starts_with(word, elements):
