@@ -11,10 +11,11 @@ app = Flask(__name__)
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
 
+dataset = 'enwiki-2019-03-01'
 
 @app.route("/")
 def hello():
-    return "Hello world!"
+    return get_succes_page("Hello!")
 
 
 @app.route("/search")
@@ -40,15 +41,15 @@ def search():
 @app.route("/pagerank")
 def build_pagerank():
     pagerank.create_connection()
-    pagerank.create_pagerank()
+    pagerank.create_pagerank(dataset)
     return get_succes_page("PageRank created!")
 
 
 @app.route("/wiki")
 def build_wiki():
     pagerank.create_connection()
-    pagerank.create_table_wiki()
-    pagerank.create_wiki('enwiki-20190301')
+    pagerank.create_table_pagerank()
+    pagerank.find_links(dataset)
     return get_succes_page("WikiDB created!")
 
 
