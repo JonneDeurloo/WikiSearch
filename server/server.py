@@ -44,6 +44,12 @@ def build_pagerank():
     pagerank.create_pagerank(dataset)
     return get_succes_page("PageRank created!")
 
+@app.route("/indexing")
+def build_indexing():
+    indexing.create_connection()
+    indexing.create_indexing()
+    return get_succes_page("Indexing created!")
+
 
 @app.route("/wiki")
 def build_wiki():
