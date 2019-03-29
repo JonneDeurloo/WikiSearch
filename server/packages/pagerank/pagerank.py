@@ -39,42 +39,47 @@ def get_all_links():
     return cursor.fetchall()
 
 
-def find_links(file):
+def find_links(file, force=False):
     """ Build the pagerank table """
 
-    # Define paths
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    file_path = os.path.join(
-        dir_path, f'..\\common\\dataset\\{file}\\{file}')
-    title_path = os.path.join(
-        dir_path, f'..\\common\\dataset\\{file}\\article_titles.txt')
+    if force or not DBM.table_exists(db, 'pagerank'):
+        create_table_pagerank()
 
-    # Extract titles
-    titles = []
+        # Define paths
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        file_path = os.path.join(
+            dir_path, f'..\\common\\dataset\\{file}\\{file}')
+        title_path = os.path.join(
+            dir_path, f'..\\common\\dataset\\{file}\\article_titles.txt')
 
-    with open(title_path, encoding="utf8") as tf:
-        for line in tf:
-            titles.append(line.replace('\n', ''))
+        # Extract titles
+        titles = []
 
-    # Read XML file
-    WLE.xml_to_csv(file_path + '.xml')
+        with open(title_path, encoding="utf8") as tf:
+            for line in tf:
+                titles.append(line.replace('\n', ''))
 
-    # Insert links into database
-    with open(file_path + '.csv', encoding="utf8") as csvfile:
-        wikireader = csv.DictReader(csvfile, delimiter='?', quotechar='|')
-        wiki_insert = []
+        # Read XML file
+        WLE.xml_to_csv(file_path + '.xml')
 
-        for row in wikireader:
-            if (len(tuple(row.values())) > 2):
-                print(tuple(row.values()))  # Should not happen
+        # Insert links into database
+        with open(file_path + '.csv', encoding="utf8") as csvfile:
+            wikireader = csv.DictReader(csvfile, delimiter='?', quotechar='|')
+            wiki_insert = []
 
-            if (tuple(row.values())[0] in titles):
-                wiki_insert.append(tuple(row.values()))
+            for row in wikireader:
+                if (len(tuple(row.values())) > 2):
+                    print(tuple(row.values()))  # Should not happen
 
-        cursor = db.cursor()
-        cursor.executemany(
-            '''INSERT INTO pagerank(title, links) VALUES(?,?)''', wiki_insert)
-        db.commit()
+                if (tuple(row.values())[0] in titles):
+                    wiki_insert.append(tuple(row.values()))
+
+            cursor = db.cursor()
+            cursor.executemany(
+                '''INSERT INTO pagerank(title, links) VALUES(?,?)''', wiki_insert)
+            db.commit()
+    else:
+        return
 
 
 def create_pagerank(dataset):
