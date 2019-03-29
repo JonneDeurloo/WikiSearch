@@ -25,13 +25,14 @@ html {
 #header-wrapper {
   height: 120px;
   width: 100%;
-  border-bottom: solid 1px #eee;
+  border-bottom: solid 1px #ddd;
   background-color: #fff;
 }
 
 #header {
   height: 100px;
   padding: 10px;
+  background-color: #fafafa;
 }
 
 #logo-wrapper {
@@ -130,8 +131,16 @@ html {
   padding: 1px 0;
 }
 
+.result-header {
+  display: inline-block;
+}
+
 .result-header a {
   text-decoration: none;
+}
+
+.result-header a:hover h3 {
+  text-decoration: underline;
 }
 
 .result-header h3 {
@@ -139,12 +148,14 @@ html {
   font-size: 1.1em;
   margin-bottom: 3px;
   font-weight: normal;
+  display: inline-block;
 }
 
 .result-header p {
-  margin: 0 0 5px 0;
+  margin: 0 0 6px 0;
   color: #006621;
   font-size: 0.9em;
+  display: inline-block;
 }
 
 .result-text {

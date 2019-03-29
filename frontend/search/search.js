@@ -69,6 +69,7 @@ function createArticle(article) {
                 '<div class="result-header">',
                     '<a href="' + url + '">',
                         '<h3>' + article.title + '</h1>',
+                        '<br>',
                         '<p>' + url + '</p>',
                     '</a>',
                 '</div>',
