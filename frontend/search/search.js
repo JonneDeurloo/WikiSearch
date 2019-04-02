@@ -20,6 +20,8 @@ function validate() {
 
 /** Query the server for search results */
 function searchArticles() {
+    $("#loadbar").removeClass('hidden');
+
     var query = getUrlParameter('q');
     var start = new Date().getTime();
 
@@ -36,10 +38,18 @@ function searchArticles() {
             });
 
             var end = new Date().getTime();
-            $('#result-count p').html('About ' + articles.length + ' search results (' + (end - start) / 1000 + ' seconds)');
+            if (articles.length > 0) {
+                $('#result-count p').html('About ' + articles.length + ' search results (' + (end - start) / 1000 + ' seconds)');
+            } else {
+                $('#result-count p').html('No results found...');
+            }
+
         },
         error: function(e) {
             console.log(e)
+        },
+        complete: function() {
+            $("#loadbar").addClass('hidden');
         }
     });
 }
@@ -104,7 +114,7 @@ function escapeHTML(input) {
 
 /** Get <p> tag list of topics from article */
 function getTopics(article) {
-    topics = "";
+    topics = '<p class="topic">Topics:</p>';
 
     $.each(article.topics, function(i, topic) {
         topics += '<p class="topic">' + topic + '</p>';
