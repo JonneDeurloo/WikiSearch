@@ -15,7 +15,6 @@ def create_connection():
 
 def create_cluster():
 	""" Create cluster object. The creation of this list can be found in the corresponding Jupyter Notebook files. """
-	
 	cluster = []
 	
 	cluster.append(["Arminianism", "Abraham", "Hymn to Proserpine", "Ammonius Saccas", "Ammianus Marcellinus", "Augustine of Hippo", "Acts of the Apostles", "Apollos", "Augustine of Canterbury", "Anabaptism", "Ambrose of Alexandria", "Anthony the Great", "Acephali", "Benedict of Nursia", "Bethlehem", "Book of Revelation", "Barnabas", "Blood libel", "Born again", "Bruno of Querfurt", "Christ (title)", "Christianity", "The Consolation of Philosophy", "C. S. Lewis", "Christian eschatology", "Christmas", "Christian of Oliva", "Christendom", "Antisemitism in Christianity", "Colossae", "Creed", "Constantine the Great", "Clement of Alexandria", "Christology", "Cyril of Alexandria", "Christianity and Judaism", "Christian mythology", "Christadelphians", "Christian countercult movement", "Demon", "Docetism", "Devil", "Doubravka of Bohemia", "Diatessaron", "Dhimmi", "Easter egg", "Easter", "Eschatology", "Elijah", "Epistle to the Hebrews", "Ezekiel", "Epistle to the Galatians", "First Epistle to the Thessalonians", "Epistle to Titus", "Epistle to Philemon", "Eusebius", "Ephrem the Syrian", "Francis Xavier", "First Epistle of Peter", "First Epistle of John", "Faith healing", "Gnosticism", "Gospel of Luke", "Gospel of Mark", "Gospel of Matthew", "Gospel of John", "Gary North (economist)", "Gregory the Illuminator", "Gnosis", "Géza", "Grand Prince of the Hungarians", "The Hound of Heaven", "Halloween", "Hosea", "Holy Spirit", "Hesychasm", "Inquisition", "Isaac Abendana", "Irenaeus", "Religion in pre-Islamic Arabia", "Isidore of Seville", "Jerome", "Josephus on Jesus", "Julian (emperor)", "John Chrysostom", "Barlaam and Josaphat", "John Abercrombie (physician)", "Judeo-Christian", "Justin Martyr", "John Climacus", "Jerry Falwell", "Labarum", "Lactantius", "Lyman Abbott", "Laurence of Canterbury", "Luke the Evangelist", "Monotheism", "Messiah", "Monasticism", "Manichaeism", "Mere Christianity", "Mary of Rome", "Mary of Bethany", "Mary Magdalene", "Millennialism", "Molokan", "New Testament", "Nazareth", "Origen", "Paganism", "Pachomius the Great", "Priest", "Pseudo-Dionysius the Areopagite", "Palestinian Christians", "Pope Boniface V", "Paul the Apostle", "Preterism", "Pope Callixtus I", "Psalms", "Prophet", "Polycarp", "Denial of the virgin birth of Jesus", "Persecution of Christians", "Religious conversion", "Revelation", "Raphael of Brooklyn", "Resurrection of Jesus", "Resurrection", "Religious pluralism", "Rooster", "Søren Kierkegaard", "Solar deity", "Satanism", "Satan", "Second Coming", "Second Epistle of John", "Ninian", "Stockholm Bloodbath", "Supersessionism", "Salvation"]) 
@@ -156,22 +155,32 @@ def clustering(text):
 	return (cluster[rcluster[text]])
 
 
-def get_articles(article):
+def get_articles(title):
 	""" Get related articles based on another article """ 
 	
-	cluster_titles = set(clustering(article))
+	cluster_titles = set(clustering(title))
 	articles = []
 
-	for title in cluster_titles:
+	for cluster_title in cluster_titles:
 		cursor = db.cursor()
-		cursor.execute('''SELECT id, text FROM wiki WHERE title = ?''', (title,))
+		cursor.execute('''SELECT id, text FROM wiki WHERE title = ?''', (cluster_title,))
 		result = cursor.fetchone()
 		
 		if result != None:
 			id = result[0]
 			text = result[1]
 
-			article = Article(id, title, text)
+			article = Article(id, cluster_title, text)
 			articles.append(article)
 
 	return articles
+
+
+def get_articles_from_list(articles):
+	result = []
+	for article in articles:
+		result.append(get_articles(article.title))
+	
+	return result
+
+	

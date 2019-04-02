@@ -35,6 +35,7 @@ def search():
     # find related articles
     clustering.create_connection()
     related = clustering.get_articles(query.replace(',', ' '))
+    # related = clustering.get_articles_from_list(matched) # Should be this (requires a list of articles instead of a single string)
 
     # rank articles based on PageRank
     pagerank.create_connection()
