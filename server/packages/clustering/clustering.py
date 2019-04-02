@@ -118,7 +118,7 @@ def create_cluster():
 	cluster.append(["Academy Awards", "Allan Dwan", "Academy Award for Best Production Design", "Arnold Schwarzenegger", "Alan Ayckbourn", "Avery Hopwood", "Ardal O'Hanlon", "Anthony Hopkins", "Adam Carolla", "Arthur Laurents", "A Doll's House", "Brigitte Bardot", "Blythe Danner", "Billy Bob Thornton", "Billy Crystal", "Bruce Campbell", "Bill Macy", "Bill Mumy", "Bela Lugosi", "Chris Morris (satirist)", "Caitlin Clarke", "Chris Sarandon", "Carol Kane", "Cary Elwes", "Christopher Guest", "Calista Flockhart", "Chaim Topol", "Clarence Brown", "The Amazing Criswell", "Drew Barrymore", "Destry Rides Again", "Dalton Trumbo", "David Janssen", "Delroy Lindo", "David Mamet", "David Letterman", "Dwight Schultz", "Doctor Syn", "Dirk Benedict", "Desi Arnaz", "Denis Leary", "Danny Kaye", "Dana Plato", "Ed Sullivan", "Elizabeth Gracen", "Eve Arden", "Elyssa Davalos", "Eli Wallach", "Fearless (1993 film)", "Fred Savage", "Franklin J. Schaffner", "Freddy Heineken", "Gene Kelly", "Gary Coleman", "Grand Guignol", "Garry Trudeau", "Groucho Marx", "George Peppard", "Gene Hackman", "George Cukor", "Gavin MacLeod", "Graham Chapman", "Gary Busey", "Hamlet", "Halle Berry", "Harry Secombe", "Humphrey Bogart", "Howard Hughes", "Harry Shearer", "Izabella Scorupco", "Ian McKellen", "Joshua Jackson", "Johnny Got His Gun", "Jack Lemmon", "John Cleese", "Jerry Lewis", "James Spader", "John Wayne", "Jonathan Meades", "Jennifer Lopez", "Joseph Cotten", "Jim Henson", "John Fink", "Jacques Cousteau", "James Stewart", "John Belushi", "Julia Child", "Joe Orton", "Jason Alexander", "Jay Leno", "Jon Voight", "Julia Roberts", "Johnny Weissmuller", "Jasmuheen", "Kyle MacLachlan", "Kevin Spacey", "Kevin Bacon", "Kabir Bedi", "Kaj Munk", "Kelsey Grammer", "Koo Stark", "Keystone Cops", "Khandi Alexander", "Katina Paxinou", "Klaus Maria Brandauer", "Katsuhiro Otomo", "Kimberly Beck", "Leslie Caron", "Lee Marvin", "Lou Ferrigno", "Lee Van Cleef", "Liv Ullmann", "Monty Python", "Marcel Achard", "Mr. T", "Marilyn Monroe", "Michael Palin", "Marx Brothers", "Marlon Brando", "Miranda Richardson", "Michael Bentine", "Mel Smith", "Mandy Patinkin", "Morgan Freeman", "Mary Tyler Moore", "Norma MacMillan", "Neil Simon", "Othello", "Pamela Anderson", "Radio Free Albemuth", "Peter Cook", "Peter Falk", "Paul Reubens", "Peter Handke", "Patrick Macnee", "Russell Crowe", "Rube Goldberg", "Romeo and Juliet", "Ruth Gordon", "Rob Reiner", "Robin Wright", "Richard R. Ernst", "Rendezvous with Rama", "Shannon Elizabeth", "Sean Connery", "Schoolly D", "Sarah Michelle Gellar", "Salma Hayek", "Sorious Samura", "Sid James", "Smuggling in fiction", "Spike Milligan", "Sweeney Todd", "Sandra Bullock", "Sonja Henie", "Tiffani Thiessen", "The Resistible Rise of Arturo Ui"])
 
 	dir_path = os.path.dirname(os.path.realpath(__file__))
-	pickle_out = open(dir_path + "/cluster","wb")
+	pickle_out = open(dir_path + "/cluster.pkl","wb")
 	pickle.dump(cluster, pickle_out)
 	pickle_out.close()
 
@@ -128,7 +128,7 @@ def create_rcluster():
 	
 	dir_path = os.path.dirname(os.path.realpath(__file__))
 
-	pickle_in = open(dir_path + "/cluster", "rb")
+	pickle_in = open(dir_path + "/cluster.pkl", "rb")
 	cluster = pickle.load(pickle_in)
 	
 	rcluster = dict()
@@ -136,7 +136,7 @@ def create_rcluster():
 		for j in range(len(cluster[i])) :
 			rcluster[cluster[i][j]] = i
 
-	pickle_out = open(dir_path + "/rcluster", "wb")
+	pickle_out = open(dir_path + "/rcluster.pkl", "wb")
 	pickle.dump(rcluster, pickle_out)
 	pickle_out.close()
 
@@ -146,10 +146,10 @@ def clustering(text):
 
 	dir_path = os.path.dirname(os.path.realpath(__file__))
 
-	pickle_in = open(dir_path + "/cluster", "rb")
+	pickle_in = open(dir_path + "/cluster.pkl", "rb")
 	cluster = pickle.load(pickle_in)
 
-	pickle_in = open(dir_path + "/rcluster", "rb")
+	pickle_in = open(dir_path + "/rcluster.pkl", "rb")
 	rcluster = pickle.load(pickle_in)
 
 	return (cluster[rcluster[text]])
@@ -163,14 +163,13 @@ def get_articles(title):
 
 	for cluster_title in cluster_titles:
 		cursor = db.cursor()
-		cursor.execute('''SELECT id, text FROM wiki WHERE title = ?''', (cluster_title,))
+		cursor.execute('''SELECT text FROM wiki WHERE title = ?''', (cluster_title,))
 		result = cursor.fetchone()
 		
 		if result != None:
-			id = result[0]
-			text = result[1]
+			text = result[0]
 
-			article = Article(id, cluster_title, text)
+			article = Article(cluster_title, text)
 			articles.append(article)
 
 	return articles
