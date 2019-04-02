@@ -47,6 +47,13 @@ def build_pagerank():
     return get_succes_page("PageRank created!")
 
 
+@app.route("/clustering")
+def build_clustering():
+    clustering.create_cluster()
+    clustering.create_rcluster()
+    return get_succes_page("Clustering done!")
+
+
 @app.route("/indexing")
 def build_indexing():
     indexing.create_connection()
