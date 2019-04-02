@@ -1,61 +1,88 @@
 import json
+import time
 
 from packages.pagerank import pagerank
-from packages.clustering import clustering
 from packages.indexing import indexing
+from packages.indexing import firstlines
+from packages.clustering import clustering
 from packages.topic_modeling import topic_modeling as tm
 
 from flask import Flask, jsonify, request
 from flask_cors import CORS, cross_origin
+
 app = Flask(__name__)
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
 
+dataset = 'enwiki-20190301'
+
 
 @app.route("/")
 def hello():
-    return "Hello world!"
+    return get_succes_page("Hello!")
 
 
 @app.route("/search")
 @cross_origin()
 def search():
     query = request.args.get('q', default='', type=str)
-    # queryList = query.split(',')
+    # query parser
+    parsed_query = None
 
     # get matching articles
-    # create connection with indexing database
-    indexed = indexing.get_similar(query)
+    matched = None
 
     # find related articles
-    # create connection with topics database
-    topics = tm.get_related(indexed)
+    clustering.create_connection()
+    cluster_related = clustering.get_articles(query.replace(',', ' '))
+    # related = clustering.get_articles_from_list(matched) # Should be this (requires a list of articles instead of a single string)
+
+    # find topics of articles
+    # tm.create_connection()
+    # topic_related = tm.get_articles(query.replace(',', ' '))
+    # topics = tm.add_topics(topic_related)
 
     # rank articles based on PageRank
     pagerank.create_connection()
-    ranked = pagerank.sort_on_pagerank(topics)
-    return jsonify(create_json(ranked))
+    pageranked = pagerank.get_pagerank(cluster_related)
+    sort = sorted(pageranked, key=lambda x: x.get_pagerank(), reverse=True)
+    return jsonify(create_json(sort))
 
 
 @app.route("/pagerank")
 def build_pagerank():
     pagerank.create_connection()
-    pagerank.create_pagerank()
+    pagerank.create_pagerank(dataset)
     return get_succes_page("PageRank created!")
+
+
+@app.route("/firstlines")
+def build_wiki():
+    firstlines.create_connection()
+    firstlines.create_table_wiki()
+    firstlines.create_wiki()
+    return get_succes_page("Wiki created!")
+
+@app.route("/clustering")
+def build_clustering():
+    clustering.create_cluster()
+    clustering.create_rcluster()
+    return get_succes_page("Clustering done!")
+
 
 @app.route("/indexing")
 def build_indexing():
     indexing.create_connection()
-    indexing.create_indexing()
+    indexing.create_indexing(dataset, force=True)
     return get_succes_page("Indexing created!")
 
 
-@app.route("/wiki")
-def build_wiki():
+@app.route("/links")
+def build_links():
     pagerank.create_connection()
-    pagerank.create_table_wiki()
-    pagerank.create_wiki('enwiki-20190301')
-    return get_succes_page("WikiDB created!")
+    pagerank.create_table_pagerank()
+    pagerank.find_links(dataset)
+    return get_succes_page("Links created!")
 
 
 def create_json(articles):

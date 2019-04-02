@@ -1,14 +1,9 @@
-import matplotlib.pyplot as plt
 import networkx as nx
-import operator
 import csv
 import os
-import sqlite3
-from sqlite3 import Error
 
-from ..common.article.article import Article
 from ..dbmanager import dbmanager as DBM
-from ..common.wiki_parser import wiki_parser as wp
+from ..common.wiki_link_extractor import wiki_link_extractor as WLE
 
 
 def create_connection():
@@ -16,18 +11,18 @@ def create_connection():
 
     global db
 
-    db = DBM.create_connection('pr')
+    db = DBM.create_connection('wiki')
 
 
-def create_table_wiki():
-    """ Create wiki table (if not exists) """
+def create_table_pagerank():
+    """ Create pagerank table (if not exists) """
 
     cursor = db.cursor()
     cursor.execute(
-        '''DROP TABLE IF EXISTS `wiki`''')
+        '''DROP TABLE IF EXISTS `pagerank`''')
     cursor.execute(
         '''
-		CREATE TABLE IF NOT EXISTS wiki(
+		CREATE TABLE IF NOT EXISTS pagerank(
 			id 			INTEGER PRIMARY KEY,
 			title 		TEXT unique,
 			links 		TEXT,
@@ -36,58 +31,70 @@ def create_table_wiki():
     db.commit()
 
 
-def table_wiki_exists():
-    cursor = db.cursor()
-    cursor.execute(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name='wiki'")
-    table = cursor.fetchone()
-    return table != None
-
-
-def get_all_from_wiki():
-    """ Get all values from the wiki table """
+def get_all_links():
+    """ Get all links from the pagerank table """
 
     cursor = db.cursor()
-    cursor.execute('''SELECT title, links FROM wiki''')
+    cursor.execute('''SELECT title, links FROM pagerank''')
     return cursor.fetchall()
 
 
-def create_wiki(file):
-    """ Build the Wiki table """
+def find_links(file, force=False):
+    """ Build the pagerank table """
 
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    file_path = os.path.join(dir_path, f'..\common\dataset\{file}\{file}')
+    if force or not DBM.table_exists(db, 'pagerank'):
+        create_table_pagerank()
 
-    wp.xml_to_csv(file_path + '.xml')
+        # Define paths
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        file_path = os.path.join(
+            dir_path, f'..\\common\\dataset\\{file}\\{file}')
+        title_path = os.path.join(
+            dir_path, f'..\\common\\dataset\\{file}\\article_titles.txt')
 
-    with open(file_path + '.csv', encoding="utf8") as csvfile:
-        wikireader = csv.DictReader(csvfile, delimiter='?', quotechar='|')
-        wiki_insert = []
-        for row in wikireader:
-            if (len(tuple(row.values())) > 2):
-                print(tuple(row.values()))  # Should not happen
+        # Extract titles
+        titles = []
 
-            wiki_insert.append(tuple(row.values()))
+        with open(title_path, encoding="utf8") as tf:
+            for line in tf:
+                titles.append(line.replace('\n', ''))
 
-        cursor = db.cursor()
-        cursor.executemany(
-            '''INSERT INTO wiki(title, links) VALUES(?,?)''', wiki_insert)
-        db.commit()
+        # Read XML file
+        WLE.xml_to_csv(file_path + '.xml')
+
+        # Insert links into database
+        with open(file_path + '.csv', encoding="utf8") as csvfile:
+            wikireader = csv.DictReader(csvfile, delimiter='?', quotechar='|')
+            wiki_insert = []
+
+            for row in wikireader:
+                if (len(tuple(row.values())) > 2):
+                    print(tuple(row.values()))  # Should not happen
+
+                if (tuple(row.values())[0] in titles):
+                    wiki_insert.append(tuple(row.values()))
+
+            cursor = db.cursor()
+            cursor.executemany(
+                '''INSERT INTO pagerank(title, links) VALUES(?,?)''', wiki_insert)
+            db.commit()
+    else:
+        return
 
 
-def create_pagerank():
-    """ Build the PageRank table """
+def create_pagerank(dataset):
+    """ Add the pagerank to the table """
 
-    if not table_wiki_exists():
-        create_table_wiki()
-        create_wiki('enwiki-20190301')
+    if not DBM.table_exists(db, 'pagerank'):
+        create_table_pagerank()
+        find_links(dataset)
 
     __create_graph()
     pr = nx.pagerank(G, alpha=0.9)
 
     cursor = db.cursor()
     cursor.executemany(
-        '''UPDATE wiki SET pagerank = ? WHERE title = ?''', [t[::-1] for t in list(pr.items())])
+        '''UPDATE pagerank SET pagerank = ? WHERE title = ?''', [t[::-1] for t in list(pr.items())])
     db.commit()
 
 
@@ -97,23 +104,32 @@ def __create_graph():
     global G
     G = nx.DiGraph()
 
-    all_rows = get_all_from_wiki()
+    links = get_all_links()
 
-    for row in all_rows:
-        for elem in row[1].split(" // "):
-            G.add_edge(row[0], elem)
+    for link_row in links:
+        for link in link_row[1].split(" // "):
+            G.add_edge(link_row[0], link)
 
 
-def sort_on_pagerank(data):
+def get_pagerank(data):
     """ Sort articles based on their PageRank """
 
     sorted_articles = []
+    cursor = db.cursor()
+    cursor.execute(
+        "SELECT title, pagerank FROM pagerank")
+    values = cursor.fetchall()
+    values_dict = dict((x, y) for x, y in values)
+
     for article in data:
-        cursor = db.cursor()
-        cursor.execute(
-            "SELECT pagerank FROM wiki WHERE title=?", (article.title,))
-        value = cursor.fetchone()
-        print(article.title, value)
-        article.set_pagerank(value[0])
-        sorted_articles.append(article)
-    return sorted(sorted_articles, key=lambda x: x.get_pagerank(), reverse=True)
+        value = None
+        
+        try:
+            value = values_dict[article.title]
+        except KeyError:
+            print("Can't find article with title '" + article.title + "'")
+        finally:
+            if value != None:
+                article.set_pagerank(value)
+                sorted_articles.append(article)
+    return sorted_articles

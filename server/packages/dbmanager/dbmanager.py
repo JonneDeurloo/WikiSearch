@@ -5,13 +5,6 @@ This folder contains all the different databases.
 Connection to a databse can be done by simply calling the 
 create_connection() function with the database name as parameter.
 
-Databases:
-- main:         Contains the wikidump (title, text, first sentence)
-- index:        Contains everything needed for indexing
-- cluster:      Contains everything needed for clustering
-- topic:        Contains everything needed for topics
-- pr:           Contains everything needed for pagerank
-
 """
 
 import os
@@ -28,6 +21,15 @@ def create_connection(db_name):
         return sqlite3.connect(db_path)
     except Error as e:
         print(e)
+
+
+def table_exists(db, name):
+    """ Check if table exists """
+    cursor = db.cursor()
+    cursor.execute(
+        f"SELECT name FROM sqlite_master WHERE type='table' AND name='{name}'")
+    table = cursor.fetchone()
+    return table != None
 
 
 def close_connection(db):
