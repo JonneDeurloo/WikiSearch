@@ -111,17 +111,26 @@ def __create_graph():
             G.add_edge(link_row[0], link)
 
 
-def sort_on_pagerank(data):
+def get_pagerank(data):
     """ Sort articles based on their PageRank """
 
     sorted_articles = []
+    cursor = db.cursor()
+    cursor.execute(
+        "SELECT title, pagerank FROM pagerank")
+    values = cursor.fetchall()
+    values_dict = dict((x, y) for x, y in values)
 
     for article in data:
-        cursor = db.cursor()
-        cursor.execute(
-            "SELECT pagerank FROM pagerank WHERE title=?", (article.title,))
-        value = cursor.fetchone()
-        print(article.title, value)
-        article.set_pagerank(value[0])
-        sorted_articles.append(article)
-    return sorted(sorted_articles, key=lambda x: x.get_pagerank(), reverse=True)
+        value = None
+        
+        try:
+            value = values_dict[article.title]
+        except KeyError:
+            print("Can't find article with title '" + article.title + "'")
+        finally:
+            if value != None:
+                article.set_pagerank(value)
+                article.set_topics(["Topic 1", "Topic 2"])
+                sorted_articles.append(article)
+    return sorted_articles
