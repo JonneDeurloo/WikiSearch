@@ -34,12 +34,17 @@ def search():
 
     # find related articles
     clustering.create_connection()
-    related = clustering.get_articles(query.replace(',', ' '))
+    cluster_related = clustering.get_articles(query.replace(',', ' '))
     # related = clustering.get_articles_from_list(matched) # Should be this (requires a list of articles instead of a single string)
+
+    # find topics of articles
+    # tm.create_connection()
+    # topic_related = tm.get_articles(query.replace(',', ' '))
+    # topics = tm.add_topics(topic_related)
 
     # rank articles based on PageRank
     pagerank.create_connection()
-    pageranked = pagerank.get_pagerank(related)
+    pageranked = pagerank.get_pagerank(cluster_related)
     sort = sorted(pageranked, key=lambda x: x.get_pagerank(), reverse=True)
     return jsonify(create_json(sort))
 
