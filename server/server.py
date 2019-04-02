@@ -1,7 +1,9 @@
 import json
+import time
 
 from packages.pagerank import pagerank
 from packages.indexing import indexing
+from packages.indexing import firstlines
 from packages.clustering import clustering
 from packages.topic_modeling import topic_modeling as tm
 
@@ -24,7 +26,6 @@ def hello():
 @cross_origin()
 def search():
     query = request.args.get('q', default='', type=str)
-
     # query parser
     parsed_query = None
 
@@ -32,12 +33,14 @@ def search():
     matched = None
 
     # find related articles
-    related = None
+    clustering.create_connection()
+    related = clustering.get_articles(query.replace(',', ' '))
 
     # rank articles based on PageRank
     pagerank.create_connection()
-    ranked = pagerank.sort_on_pagerank(related)
-    return jsonify(create_json(ranked))
+    pageranked = pagerank.get_pagerank(related)
+    sort = sorted(pageranked, key=lambda x: x.get_pagerank(), reverse=True)
+    return jsonify(create_json(sort))
 
 
 @app.route("/pagerank")
@@ -46,6 +49,13 @@ def build_pagerank():
     pagerank.create_pagerank(dataset)
     return get_succes_page("PageRank created!")
 
+
+@app.route("/firstlines")
+def build_wiki():
+    firstlines.create_connection()
+    firstlines.create_table_wiki()
+    firstlines.create_wiki()
+    return get_succes_page("Wiki created!")
 
 @app.route("/clustering")
 def build_clustering():
