@@ -8,14 +8,12 @@ class Article(object):
 
     # Add other variables if needed
 
-    def __init__(self, id, title, text):
-        self.id = id
+    def __init__(self, title, text):
         self.title = title
         self.text = text
 
     def get_json(self):
         data = {}
-        data['id'] = self.id
         data['title'] = self.title
         data['text'] = self.text
         data['cosine_sim'] = self.__cosine_sim

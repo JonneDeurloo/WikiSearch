@@ -131,6 +131,5 @@ def get_pagerank(data):
         finally:
             if value != None:
                 article.set_pagerank(value)
-                article.set_topics(["Topic 1", "Topic 2"])
                 sorted_articles.append(article)
     return sorted_articles
