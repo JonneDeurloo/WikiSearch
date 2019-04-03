@@ -8,9 +8,16 @@ class Article(object):
 
     # Add other variables if needed
 
-    def __init__(self, title, text):
+    def __init__(self, id, title, text):
+        self.id = id
         self.title = title
         self.text = text
+
+    def __eq__(self, other):
+        return self.id == other.id
+
+    def __hash__(self):
+        return hash(('id', self.id))
 
     def get_json(self):
         data = {}
@@ -42,6 +49,6 @@ class Article(object):
         return self.__cosine_sim
 
     def get_harmonic_mean(self):
-        top = 2.0 * self.__pagerank * self.__cosine_sim
-        bottom = self.__pagerank + self.__cosine_sim
+        top = self.__pagerank * self.__cosine_sim
+        bottom = 50000 * self.__pagerank +  self.__cosine_sim
         return top / bottom

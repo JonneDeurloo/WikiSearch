@@ -10,7 +10,7 @@ def create_connection():
 
     global db
 
-    db = DBM.create_connection('wiki')
+    db = DBM.create_connection('indexing')
 
 
 def get_topics(title, ids=False):

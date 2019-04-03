@@ -10,7 +10,7 @@ def create_connection():
 
     global db
 
-    db = DBM.create_connection('wiki')
+    db = DBM.create_connection('indexing')
 
 
 def create_cluster():
@@ -152,7 +152,10 @@ def clustering(text):
 	pickle_in = open(dir_path + "/rcluster.pkl", "rb")
 	rcluster = pickle.load(pickle_in)
 
-	return (cluster[rcluster[text]])
+	try:
+		return (cluster[rcluster[text]])
+	except KeyError:
+		return []
 
 
 def get_articles(title):
@@ -163,13 +166,14 @@ def get_articles(title):
 
 	for cluster_title in cluster_titles:
 		cursor = db.cursor()
-		cursor.execute('''SELECT text FROM wiki WHERE title = ?''', (cluster_title,))
+		cursor.execute('''SELECT id, text FROM wiki_text WHERE title = ?''', (cluster_title,))
 		result = cursor.fetchone()
 		
 		if result != None:
-			text = result[0]
+			id = result[0]
+			text = result[1]
 
-			article = Article(cluster_title, text)
+			article = Article(id, cluster_title, text)
 			articles.append(article)
 
 	return articles
@@ -178,8 +182,8 @@ def get_articles(title):
 def get_articles_from_list(articles):
 	result = []
 	for article in articles:
-		result.append(get_articles(article.title))
+		result += get_articles(article.title)
 	
-	return result
+	return set(result)
 
 	

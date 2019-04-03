@@ -2,7 +2,7 @@ import json
 import time
 
 from packages.pagerank import pagerank
-from packages.indexing import indexing
+from packages.indexing import indexing2 as indexing
 from packages.indexing import firstlines
 from packages.clustering import clustering
 from packages.topic_modeling import topic_modeling as tm
@@ -30,22 +30,27 @@ def search():
     parsed_query = None
 
     # get matching articles
-    matched = None
+    indexing.create_connection()
+    # indexing.create_indexing()
+    matched, query_vec = indexing.query_results(query)
 
     # find related articles
     clustering.create_connection()
-    cluster_related = clustering.get_articles(query.replace(',', ' '))
-    # related = clustering.get_articles_from_list(matched) # Should be this (requires a list of articles instead of a single string)
+    # cluster_related = clustering.get_articles(query.replace(',', ' '))
+    related = clustering.get_articles_from_list(matched) # Should be this (requires a list of articles instead of a single string)
 
+    related_sim = indexing.get_sim_scores(query_vec, related)
     # find topics of articles
     # tm.create_connection()
     # topic_related = tm.get_articles(query.replace(',', ' '))
-    # topics = tm.add_topics(topic_related)
+    topics = tm.add_topics(related_sim)
 
     # rank articles based on PageRank
     pagerank.create_connection()
-    pageranked = pagerank.get_pagerank(cluster_related)
-    sort = sorted(pageranked, key=lambda x: x.get_pagerank(), reverse=True)
+    #pageranked = pagerank.get_pagerank(cluster_related)
+    pageranked = pagerank.get_pagerank(related_sim)
+    sort = sorted(pageranked, key=lambda x: x.get_harmonic_mean(), reverse=True)
+
     return jsonify(create_json(sort))
 
 
@@ -73,7 +78,7 @@ def build_clustering():
 @app.route("/indexing")
 def build_indexing():
     indexing.create_connection()
-    indexing.create_indexing(dataset, force=True)
+    indexing.create_indexing()
     return get_succes_page("Indexing created!")
 
 

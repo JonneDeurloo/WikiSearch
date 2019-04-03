@@ -11,7 +11,7 @@ def create_connection():
 
     global db
 
-    db = DBM.create_connection('wiki')
+    db = DBM.create_connection('indexing')
 
 
 def create_table_pagerank():
@@ -123,7 +123,7 @@ def get_pagerank(data):
 
     for article in data:
         value = None
-        
+
         try:
             value = values_dict[article.title]
         except KeyError:

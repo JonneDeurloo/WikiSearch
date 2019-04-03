@@ -114,11 +114,16 @@ function escapeHTML(input) {
 
 /** Get <p> tag list of topics from article */
 function getTopics(article) {
-    topics = '<p class="topic">Topics:</p>';
+    if (article.topics.length > 0) {
 
-    $.each(article.topics, function(i, topic) {
-        topics += '<p class="topic">' + topic + '</p>';
-    });
+        topics = '<p class="topic">Topics:</p>';
 
-    return topics;
+        $.each(article.topics, function (i, topic) {
+            topics += '<p class="topic">' + topic + '</p>';
+        });
+
+        return topics;
+    } else {
+        return "";
+    }
 }

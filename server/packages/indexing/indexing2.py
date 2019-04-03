@@ -10,10 +10,10 @@ import numpy as np
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 from nltk.tokenize import word_tokenize
-from dbmanager import dbmanager as DBM
-#from ..dbmanager import dbmanager as DBM
-#from classes import article
-#from ..classes import article
+# from dbmanager import dbmanager as DBM
+from ..dbmanager import dbmanager as DBM
+# from classes.article import Article
+from ..classes.article import Article
 
 
 
@@ -25,7 +25,7 @@ path_titles = file_path + f'\\{file_titles}'
 file_articles = "articles_in_plain_text.txt"
 path_articles = file_path + f'\\{file_articles}'
 total_articles = 13385
-n_terms = 398596
+n_terms = 398597
 
 
 # Create a connection to the database
@@ -65,7 +65,8 @@ def create_table_wiki():
 		CREATE TABLE IF NOT EXISTS wiki(
 			id 			INTEGER PRIMARY KEY,
 			term 		TEXT unique,
-			idf      	INTEGER)
+			idf      	INTEGER,
+			docs        TEXT)
 	    ''')
     db.commit()
 
@@ -96,22 +97,22 @@ def create_indexing():
         create_table_docvec()
 
         # Get the dictionary with all the terms, idfs and document number with frequency
-        # index_arts = calc_idfs(index_articles(path_articles, path_titles))
+        index_arts = calc_idfs(index_articles(path_articles, path_titles))
 
         # Uncomment to save indexes dictionary to a pickle file
-        # pickle_out = open("indexes.pkl", "wb")
+        # pickle_out = open(dir_path+"\\indexes.pkl", "wb")
         # pickle.dump(index_arts, pickle_out)
         # pickle_out.close()
 
         # Uncomment to lead the pickle file of indexes dictionary
-        pickle_in = open("indexes.pkl", "rb")
-        index_arts = pickle.load(pickle_in)
+        # pickle_in = open(dir_path+"\\indexes.pkl", "rb")
+        # index_arts = pickle.load(pickle_in)
 
         # Insert the terms and idfs to the database
         inv_index_list = indexdict_to_list(index_arts)
         cursor = db.cursor()
         cursor.executemany(
-            '''INSERT INTO wiki(term, idf) VALUES(?, ?)''', inv_index_list)
+            '''INSERT INTO wiki(term, idf, docs) VALUES(?, ?, ?)''', inv_index_list)
         db.commit()
         inv_index_list = None
 
@@ -121,13 +122,13 @@ def create_indexing():
         doc_vec_list = tfidf_doc_vec(index_arts)
 
         # Uncomment to save dovecs dictionary to a pickle file
-        # pickle_out = open("docvecs.pkl", "wb")
+        # pickle_out = open(dir_path_"\\docvecs.pkl", "wb")
         # pickle.dump(doc_vec_list, pickle_out)
         # pickle_out.close()
 
         # Uncomment to lead the pickle file of indexes dictionary
-        pickle_in = open("docvecs.pkl", "rb")
-        doc_vec_list = pickle.load(pickle_in)
+        # pickle_in = open(dir_path+"\\docvecs.pkl", "rb")
+        # doc_vec_list = pickle.load(pickle_in)
 
         cursor = db.cursor()
         cursor.executemany(
@@ -146,19 +147,23 @@ def query_results(query):
     query_vec = np.zeros(n_terms)
     # Create a list for the cosine similarity scores of the articles/documents
     sim_scores = []
+    # Create a doc list for all the docs to go through
+    doc_list = []
 
     # For each token in the query
     for token in query_tokens:
         # Get the id of the token in the database and the idf
         cursor = db.cursor()
         cursor.execute(
-            "SELECT id, idf FROM wiki WHERE term = ?", (token, ))
+            "SELECT id, idf, docs FROM wiki WHERE term = ?", (token, ))
         # Check if the token is in the database
         value = cursor.fetchone()
         if value != None:
             # If so add the id idf tuple to the query dictionary
             # value = cursor.fetchone()
             id_idf = (value[0], value[1])
+            docs = value[2].split(' ')
+            doc_list += docs
             query_dict[token] = id_idf
 
     # For each term and id, idf tuple in the query dictionary
@@ -173,12 +178,14 @@ def query_results(query):
         term_id = tup[0] - 1
         query_vec[term_id] = (tfidf)
 
-    cursor = db.cursor()
-    cursor.execute('''SELECT id, vec FROM docvec''')
-    tot_docvecs = cursor.fetchall()
 
-    for (id_doc, docvecstring) in tot_docvecs:
-        # docvec_dict = {}
+    for doc_id in set(doc_list):
+        id_doc = int(doc_id) + 1
+        cursor = db.cursor()
+        cursor.execute('''SELECT vec FROM docvec WHERE id = ?''', (id_doc, ))
+        value = cursor.fetchone()
+        docvecstring = value[0]
+
         doc_vec = np.zeros(n_terms)
 
         id_tfidf_list = docvecstring.split(' ')
@@ -188,17 +195,6 @@ def query_results(query):
             tfidf = float(split[1])
             doc_vec[term_id] = tfidf
 
-        #     docvec_dict[int(split[0])] = float(split[1])
-        #
-        # doc_vec = np.zeros(n_terms)
-        #
-        # for term, tup in query_dict.items():
-        #     term_id = tup[0]
-        #     if term_id in docvec_dict.keys():
-        #         if term_id == 4200 and id_doc == 3938:
-        #             print(docvec_dict[term_id], docvec_dict[tup[0]])
-        #         doc_vec[term_id - 1] = docvec_dict[term_id]
-
         # Calculate the similarity score between the query and the document
         sim_score = cos_sim(query_vec, doc_vec)
 
@@ -206,73 +202,66 @@ def query_results(query):
         if (sim_score != 0.0):
             sim_scores.append((id_doc - 1, sim_score))
 
-    # # For each article/document
-    # for i in range(total_articles+1):
-    #     print(i)
-    #     if i == 0: continue
-    #     # Get the documnent vector
-    #     cursor = db.cursor()
-    #     cursor.execute(
-    #         "SELECT vec FROM docvec WHERE id = ?", (i,))
-    #     value = cursor.fetchone()
-    #
-    #     # Split the string into a float vector of tf.idf values
-    #     doc_vec = [float(x) for x in value[0].split(' ')]
-    #
-    #     # Resize the document vector to the size of the query
-    #     doc_vec_q = []
-    #
-    #     # For each term and id, idf tuple in the query dictionary
-    #     for term, tup in query_dict.items():
-    #         # Get the id and append the idf value of that id in the document vector
-    #         id = tup[0]
-    #         doc_vec_q.append(doc_vec[id-1])
-    #
-    #     # Calculate the similarity score between the query and the document
-    #     sim_score = cos_sim(query_vec, doc_vec_q)
-    #
-    #     # If there is no score don't add it to the list of possible similar documents
-    #     if(sim_score != 0.0):
-    #         sim_scores.append((i-1, sim_score))
-
     # Sort the list of similarity documents on cosine similarity score from high to low
     sim_scores.sort(key=operator.itemgetter(1), reverse=True)
 
-    sim_scores2 = sim_scores[:10]
-
+    sim_scores2 = sim_scores[:20]
     titles = article_title_list2(path_titles)
 
+    res_articles = []
+
+    # Go through each article with similarity score
+    for tup in sim_scores2:
+        # Get the doc id, title and similarity score
+        doc_id = tup[0]
+        title = titles[tup[0]]
+        cos_sim_score = tup[1]
+
+        # Get the text of the article
+        cursor = db.cursor()
+        cursor.execute('''SELECT text FROM wiki_text WHERE title = ?''', (title,))
+        result = cursor.fetchone()
+
+        # Create an article with the data
+        if result != None:
+            id_doc += 1
+            text = result[0]
+            article = Article(id_doc, title, text)
+            article.set_similarity(cos_sim_score)
+            res_articles.append(article)
+
+    return res_articles, query_vec
 
 
-    # for tup in sim_scores[:10]:
-    #     print(titles[tup[0]])
+# Get similarity scores for other (clustering) articles
+def get_sim_scores(query_vec, related_articles):
 
-    # return sim_scores[:10]
+    res_articles = []
+    # Go through each article
+    for article in related_articles:
+        # Get the document vector for the article
+        cursor = db.cursor()
+        cursor.execute('''SELECT vec FROM docvec WHERE id = ?''', (article.id,))
+        value = cursor.fetchone()
+        docvecstring = value[0]
 
+        doc_vec = np.zeros(n_terms)
 
+        # Insert the tfidf values into the document vector
+        id_tfidf_list = docvecstring.split(' ')
+        for id_tfidf in id_tfidf_list:
+            split = id_tfidf.split(':')
+            term_id = int(split[0]) - 1
+            tfidf = float(split[1])
+            doc_vec[term_id] = tfidf
 
-def documents_to_tfidf_vector(mydict):
+        # Calculate the similarity score between the query and the document
+        sim_score = cos_sim(query_vec, doc_vec)
 
-    doc_vecs = []
-    for i in range(total_articles):
-        print('to tfidf article:', i)
-        doc_vec = []
-        for term, freq_docs in mydict.items():
-            docs_counts = freq_docs[1]
-            idf_term = freq_docs[0]
-            tf_log = 0
-            if i in docs_counts.keys():
-                doc_count = docs_counts[i]
-                tf_log = 1 + math.log10(doc_count)
+        article.set_similarity(sim_score)
+        res_articles.append(article)
 
-            tfidf = tf_log * idf_term
-            doc_vec.append(round(tfidf, 4))
-
-        doc_vec_str = ' '.join(str(el) for el in doc_vec)
-
-        doc_vecs.append([doc_vec_str])
-
-    return doc_vecs
+    return res_articles
 
 
 # Calculate the idfs of all the terms in the dictionary
@@ -294,18 +283,22 @@ def calc_idfs(mydict):
     return mydict
 
 
-# TODO: comments
+# Creates document vectors from the inverted index dictionary
 def tfidf_doc_vec(mydict):
 
     doc_vecs = []
+    # For all the artiles
     for i in range(total_articles):
         print('docvec tfidf article:', i)
 
         doc_vec = []
         id_term = 1
+        # Go through all the terms
         for term, freq_docs in mydict.items():
+            # Get the frequency and idf
             docs_counts = freq_docs[1]
             idf_term = freq_docs[0]
+            # Calculate the tfidf if the term is in the document
             if i in docs_counts.keys():
                 doc_count = docs_counts[i]
                 tf_log = 1 + math.log10(doc_count)
@@ -316,6 +309,7 @@ def tfidf_doc_vec(mydict):
                 doc_vec.append(id_idf_str)
             id_term += 1
 
+        # Create a document vector string without the 0's
         doc_vec_str = ' '.join(str(el) for el in doc_vec)
         doc_vecs.append([doc_vec_str])
 
@@ -323,24 +317,22 @@ def tfidf_doc_vec(mydict):
 
 
 
-# TODO: comments
+# Makes the inverted index dictionary to a list of items
 def indexdict_to_list(mydict):
 
     inv_index_list = []
+    # Go through all the keys in the dictionary
     for k1, v1 in mydict.items():
-        # doc_freq = v1[0]
-        # idf_term = math.log10(float(total_articles) / float(doc_freq))
-        # v1[0] = idf_term
-
-        # cursor = db.cursor()
-        # cursor.execute(
-        #     '''INSERT INTO wiki(term, idf) VALUES(?, ?)''', (k1, idf_term))
-        # db.commit()
-
-        inv_index_list.append([k1, v1[0]])
+        doc_list = []
+        # Get the document ids
+        for key in v1[1].keys():
+            doc_list.append(key)
+        # Create a string
+        doc_str = ' '.join(str(el) for el in doc_list)
+        # Create a list for executing many sql queries
+        inv_index_list.append([k1, v1[0], doc_str])
 
     return inv_index_list
-    #return mydict
 
 
 
@@ -587,18 +579,3 @@ def cos_sim(a, b):
     # Else calculate and return the cosine sim
     else:
         return numerator / denomerator
-
-
-now = datetime.datetime.now()
-print('start:', now)
-
-create_connection()
-create_indexing()
-print("\n---------------\n")
-
-query = "Eindhoven"
-query_results(query)
-
-end = datetime.datetime.now()
-print('\nend:', datetime.datetime.now())
-print('diff:', end - now)
